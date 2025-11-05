@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-	<ItemGroup>
-		<ProjectReference Include="..\IngSw-Application\IngSw-Application.csproj" />
-	</ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Interfaces\IAuthRepository.cs" />
+  </ItemGroup>
 </Project>

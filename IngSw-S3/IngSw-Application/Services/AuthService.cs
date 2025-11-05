@@ -20,7 +20,7 @@ public class AuthService : IAuthService
     }
     public async Task<UserDto.Response?> Login(UserDto.Request? userDto)
     {
-        var userFound = await _authRepository.
+        var userFound = await _authRepository.Select(
             u => u.UserName == userDto!.userName, nameof(Employee));
         if (userFound == null || !VerifyPassword(userDto!.password!, userFound.Password!)) throw new EntityNotFoundException("El usuario o la contraseña son incorrectos");
         if (userFound.Employee == null) throw new NullException("El usuario no tiene un empleado asociado");
