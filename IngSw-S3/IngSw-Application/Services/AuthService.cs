@@ -23,11 +23,10 @@ public class AuthService : IAuthService
     }
     public async Task<UserDto.Response?> Login(UserDto.Request? userData)
     {
-        if (string.IsNullOrWhiteSpace(userData!.email) || string.IsNullOrWhiteSpace(userData!.password)) throw new BusinessConflictException("Debe ingresar correctamente los datos");
-        var userFound = await _authRepository.Login(userData.email);
-        if (userFound == null || userFound.Password != userData.password /*|| !VerifyPassword(userData!.password!, userFound.Password!)*/) throw new EntityNotFoundException("Usuario o contraseña incorrecto.");
-        if (userFound.Employee == null) throw new NullException("El usuario no tiene un empleado asociado");
-        return userFound != null ? new UserDto.Response
+        if (string.IsNullOrWhiteSpace(userData!.email) || string.IsNullOrWhiteSpace(userData!.password)) throw new ArgumentException("Debe ingresar correctamente los datos");
+        var userFound = await _authRepository.GetByEmail(userData.email);
+        if (userFound == null || !VerifyPassword(userData!.password!, userFound.Password!)) throw new EntityNotFoundException("Usuario o contraseña incorrecto.");
+        return new UserDto.Response
         (
             userFound.Employee.Email!,
             userFound.Employee.Name!,
@@ -36,11 +35,11 @@ public class AuthService : IAuthService
             userFound.Employee.PhoneNumber!,
             userFound.Employee.GetType().Name,
             ""
-            // TokenGenerator(userFound)
-        ) : null;
+        // TokenGenerator(userFound)
+        );
     }
 
-    public async Task<UserDto.Response?> Register(UserDto.Register? userData)
+    public async Task<UserDto.Response?> Register(UserDto.RequestRegister? userData)
     {
         User newUser = new User
         {

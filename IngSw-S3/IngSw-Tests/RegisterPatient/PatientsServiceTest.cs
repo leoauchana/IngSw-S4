@@ -78,7 +78,7 @@ public class PatientsServiceTest
         Assert.Equal(patientDto.lastNamePatient, result.lastNamePatient);
     }
     [Fact]
-    public async Task AddPatient_WhenTheHealthcareSystemExistsWithSocialWorkInexisting_ShouldCreateThePatient()
+    public async Task AddPatient_WhenTheHealthcareSystemExistsWithSocialWorkInexisting_ShouldNotCreateThePatient()
     {
         // Arrange
         var patientDto = new PatientDto.Request(
@@ -105,7 +105,7 @@ public class PatientsServiceTest
         await _patientsRepository.Received(0).AddPatient(Arg.Any<Patient>());
     }
     [Fact]
-    public async Task AddPatient_WhenTheHealthcareSystemExistsWithSocialWorkExistingButWitouthAffiliation_ShouldCreateThePatient()
+    public async Task AddPatient_WhenTheHealthcareSystemExistsWithSocialWorkExistingButWitouthAffiliation_ShouldNotCreateThePatient()
     {
         // Arrange
         var patientDto = new PatientDto.Request(
@@ -131,6 +131,52 @@ public class PatientsServiceTest
         Assert.Equal("El paciente no es afiliado de la obra social, por lo tanto no se puede registrar al paciente.", exception.Message);
         await _socialWorkServiceApi.Received(1).ExistingSocialWork(Arg.Any<string>());
         await _socialWorkServiceApi.Received(1).IsAffiliated(Arg.Any<string>());
+        await _patientsRepository.Received(0).AddPatient(Arg.Any<Patient>());
+    }
+    [Fact]
+    public async Task AddPatient_WhenSocialWorkOrAffiliateNumberIsMissing_ShouldThrowArgumentException()
+    {
+        // Arrange
+
+        // Caso 1: Falta el número de afiliado, pero se indica la obra social
+        var patientDtoMissingAffiliate = new PatientDto.Request(
+            cuilPatient: "20-45750673-8",
+            namePatient: "Lautaro",
+            lastNamePatient: "Lopez",
+            email: "lautalopez@gmail.com",
+            streetDomicilie: "Avenue Nine Of July",
+            numberDomicilie: 356,
+            localityDomicilie: "CABA",
+            nameSocialWork: "Subsidio",
+            affiliateNumber: null
+        );
+        // Caso 2: Falta la obra social, pero se indica el número de afiliado
+        var patientDtoMissingSocialWork = new PatientDto.Request(
+            cuilPatient: "20-45750673-8",
+            namePatient: "Lautaro",
+            lastNamePatient: "Lopez",
+            email: "lautalopez@gmail.com",
+            streetDomicilie: "Avenue Nine Of July",
+            numberDomicilie: 356,
+            localityDomicilie: "CABA",
+            nameSocialWork: null,
+            affiliateNumber: "4798540152"
+        );
+
+        // Act & Assert
+
+        var exception1 = await Assert.ThrowsAsync<ArgumentException>(
+            () => _patientsService.AddPatient(patientDtoMissingAffiliate)
+        );
+        Assert.Equal("Si se ingresa la obra social, también debe ingresarse el número de afiliado (y viceversa).", exception1.Message);
+
+        var exception2 = await Assert.ThrowsAsync<ArgumentException>(
+            () => _patientsService.AddPatient(patientDtoMissingSocialWork)
+        );
+        Assert.Equal("Si se ingresa la obra social, también debe ingresarse el número de afiliado (y viceversa).", exception2.Message);
+
+        await _socialWorkServiceApi.Received(0).ExistingSocialWork(Arg.Any<string>());
+        await _socialWorkServiceApi.Received(0).IsAffiliated(Arg.Any<string>());
         await _patientsRepository.Received(0).AddPatient(Arg.Any<Patient>());
     }
     [Fact]

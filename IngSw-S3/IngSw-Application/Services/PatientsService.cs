@@ -19,13 +19,16 @@ public class PatientsService
     public async Task<PatientDto.Response?> AddPatient(PatientDto.Request patientData)
     {
         var patientFound = await _patientRepository.GetByCuil(patientData.cuilPatient);
-        if (patientFound != null && patientFound!.Any() )
+        if (patientFound != null)
             throw new BusinessConflictException($"El paciente de cuil {patientData.cuilPatient} ya se encuentra registrado");
         Affiliate? affiliation = null;
+        bool oneCompleted = string.IsNullOrEmpty(patientData.nameSocialWork) != string.IsNullOrEmpty(patientData.affiliateNumber);
+        if (oneCompleted)
+        {
+            throw new ArgumentException("Si se ingresa la obra social, también debe ingresarse el número de afiliado (y viceversa).");
+        }
         if (!string.IsNullOrEmpty(patientData.nameSocialWork) && !string.IsNullOrEmpty(patientData.affiliateNumber))
         {
-            //var existingSocial = await _socialWorkServiceApi.ExistingSocialWork(patientData.nameSocialWork);
-            //var isAffiliation = await _socialWorkServiceApi.IsAffiliated(patientData.affiliateNumber);
             if (!await _socialWorkServiceApi.ExistingSocialWork(patientData.nameSocialWork))
                 throw new BusinessConflictException("La obra social no existe, por lo tanto no se puede registrar al paciente.");
             if (!await _socialWorkServiceApi.IsAffiliated(patientData.affiliateNumber))
