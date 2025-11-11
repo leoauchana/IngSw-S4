@@ -3,6 +3,7 @@ using IngSw_Application.Exceptions;
 using IngSw_Application.Interfaces;
 using IngSw_Domain.Entities;
 using IngSw_Domain.Interfaces;
+using IngSw_Domain.ValueObjects;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -22,8 +23,9 @@ public class AuthService : IAuthService
     }
     public async Task<UserDto.Response?> Login(UserDto.Request? userData)
     {
-        var userFound = await _authRepository.GetByEmail(userData!.email!);
-        if (userFound == null /*|| !VerifyPassword(userData!.password!, userFound.Password!)*/) throw new EntityNotFoundException("Usuario o contraseña incorrecto.");
+        if (string.IsNullOrWhiteSpace(userData!.email) || string.IsNullOrWhiteSpace(userData!.password)) throw new BusinessConflictException("Debe ingresar correctamente los datos");
+        var userFound = await _authRepository.Login(userData.email);
+        if (userFound == null || userFound.Password != userData.password /*|| !VerifyPassword(userData!.password!, userFound.Password!)*/) throw new EntityNotFoundException("Usuario o contraseña incorrecto.");
         if (userFound.Employee == null) throw new NullException("El usuario no tiene un empleado asociado");
         return userFound != null ? new UserDto.Response
         (
@@ -35,6 +37,35 @@ public class AuthService : IAuthService
             userFound.Employee.GetType().Name,
             ""
             // TokenGenerator(userFound)
+        ) : null;
+    }
+
+    public async Task<UserDto.Response?> Register(UserDto.Register? userData)
+    {
+        User newUser = new User
+        {
+            Email = userData?.email,
+            Password = userData?.password,
+            Employee = new Employee
+            {
+                Name = userData?.name,
+                LastName = userData?.lastName,
+                Cuil = Cuil.Create(userData?.cuil),
+                PhoneNumber = userData?.phoneNumber,
+                Registration = userData?.licence,
+            }
+        };
+        var userRegistered = await _authRepository.Register(newUser);
+
+        return userRegistered != null ? new UserDto.Response
+        (
+            newUser.Email, 
+            newUser.Employee.Name, 
+            newUser.Employee.LastName, 
+            newUser.Employee.Cuil.Value, 
+            newUser.Employee.Registration, 
+            newUser.Employee.PhoneNumber,
+            newUser.Employee.GetType().Name
         ) : null;
     }
     //private string TokenGenerator(User user)
