@@ -27,8 +27,8 @@ public class AuthDao : DaoBase
     public async Task<User?> Register(User newUser)
     {
         var insertEmployeeQuery = """
-        INSERT INTO employees (id, name, last_name, cuil, phone_number, email, registration)
-        VALUES (@Id, @Name, @LastName, @Cuil, @PhoneNumber, @Email, @Registration)
+        INSERT INTO employees (id, name, last_name, cuil, phone_number, email, registration, type_employee)
+        VALUES (@Id, @Name, @LastName, @Cuil, @PhoneNumber, @Email, @Registration, @TypeEmployee)
         """;
 
         var employeeParams = new[]
@@ -39,7 +39,8 @@ public class AuthDao : DaoBase
         new MySqlParameter("@Cuil", newUser.Employee.Cuil!.Value),
         new MySqlParameter("@PhoneNumber", newUser.Employee.PhoneNumber),
         new MySqlParameter("@Email", newUser.Employee.Email),
-        new MySqlParameter("@Registration", newUser.Employee.Registration)
+        new MySqlParameter("@Registration", newUser.Employee.Registration),
+        new MySqlParameter("@TypeEmployee", newUser.Employee.TypeEmployee)
     };
 
         await ExecuteNonQuery(insertEmployeeQuery, employeeParams);
