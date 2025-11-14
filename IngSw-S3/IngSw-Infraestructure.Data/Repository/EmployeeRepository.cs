@@ -1,7 +1,5 @@
-﻿using IngSw_Application.DTOs;
-using IngSw_Domain.Entities;
+﻿using IngSw_Domain.Entities;
 using IngSw_Domain.Interfaces;
-using IngSw_Domain.ValueObjects;
 using IngSw_Infraestructure.Data.DAOs;
 
 namespace IngSw_Infraestructure.Data.Repository;
@@ -20,7 +18,7 @@ public class EmployeeRepository : IEmployeeRepository
         throw new NotImplementedException();
     }
 
-    public async Task<Employee?> Register(Employee newUser)
+    public async Task<Employee?> Register(Employee newUEmployee)
     {
         throw new NotImplementedException();
     }
